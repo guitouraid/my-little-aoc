@@ -43,7 +43,7 @@ Supposed you would want to start from the early days
 # Use your favourite editor/IDE and fill in some settings and the `exo_1` function, for a start
 # Then try your solution against testing data
 ./aoc.py play 2015 1 1 --test
-# if confident enough
+# and when confident enough
 ./aoc.py play 2015 1 1
 # Now you can copy/paste the solution on [AOC](https://adventofcode.com/) to reclaim your first star
 ```
