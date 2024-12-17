@@ -48,4 +48,9 @@ Supposed you would want to start from the early days
 # Now you can copy/paste the solution on [AOC](https://adventofcode.com/) to reclaim your first star
 ```
 
+### And just a warning
+
+If you don't want to be spoiled any solution, just avoid looking at `my-little-adventure` branch.
+
+
 TODO: bring in some more stuff (details about settings file, other?..)
