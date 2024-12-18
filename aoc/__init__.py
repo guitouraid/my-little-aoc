@@ -32,7 +32,7 @@ class RawData(BaseData):
         return self.data
 
     def _read_lines(self) -> list[str]:
-        return [line for line in self.data.split('\n') if line]
+        return [line.strip() for line in self.data.strip().split('\n')]
 
 
 class FileData(BaseData):
