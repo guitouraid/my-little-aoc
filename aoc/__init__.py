@@ -1,6 +1,7 @@
+from collections.abc import Callable
 from enum import Enum
 import os
-from typing import Any, Callable, Optional, Union
+from typing import Any
 
 class ReadMode(Enum):
     READ_LINES = 0
@@ -13,7 +14,7 @@ class BaseData:
     def _read_lines(self) -> list[str]:
         raise NotImplementedError
 
-    def read(self, mode: ReadMode) -> Union[str, list[str]]:
+    def read(self, mode: ReadMode) -> str|list[str]:
         match mode:
             case ReadMode.READ_LINES:
                 return self._read_lines()
@@ -50,7 +51,7 @@ class FileData(BaseData):
  
 
 class Exercise:
-    def __init__(self, runner: Callable, read_mode: ReadMode, real_data: BaseData, real_kw_args: Optional[dict], test_data: BaseData, test_kw_args: Optional[dict], test_result: Any) -> None:
+    def __init__(self, runner: Callable, read_mode: ReadMode, real_data: BaseData, real_kw_args: dict|None, test_data: BaseData, test_kw_args: dict|None, test_result: Any) -> None:
         self.runner = runner
         self.read_mode = read_mode
         self.data = ((real_data, real_kw_args), (test_data, test_kw_args))
