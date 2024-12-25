@@ -1,24 +1,18 @@
-from typing import Any
-from aoc import ReadMode
-
-
-### all at once or line by line?
-READ_MODE = ReadMode.READ_LINES
-#READ_MODE = ReadMode.READ_ALL
+READ_MODE = "{{ read.value }}"
 
 ### test/real data as raw string or file
 TEST_DATA_2 = TEST_DATA_1 = """
 """
 
-### store file in `data/{{ year }}` dir
-REAL_FILE_2 = REAL_FILE_1 = "{{ year }}_{{ day }}_1.txt"
+### store file under `DATA_DIR`
+REAL_FILE_2 = REAL_FILE_1 = "{{ year }}_{{ day }}.txt"
 
 
-def exo1(data: list[str]|str) -> Any:
-    pass
+def exo1(data: {{ read.data_type() }}) -> int:
+    return 0
 
-def exo2(data: list[str]|str) -> Any:
-    pass
+def exo2(data: {{ read.data_type() }}) -> int:
+    return 0
 
 settings = (
     {
