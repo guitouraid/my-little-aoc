@@ -1,7 +1,6 @@
 #!/bin/env python
 
 import importlib
-import importlib.util
 import os
 from pathlib import Path
 from typing_extensions import Annotated
