@@ -7,44 +7,46 @@ from typing_extensions import Annotated
 import typer
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from aoc import Exercise
+from aoc import ReadMode
+from aoc.exercise import Exercise
+from aoc.settings import AOCSettings
 
-DATA_DIR = os.path.join(
-    os.path.dirname(__file__),
-    'data'
-)
 
 year_type = Annotated[int, typer.Argument(help="Which year ?")]
 day_type = Annotated[int, typer.Argument(help="Which day ?")]
 
 app = typer.Typer(help="Yeah, it's Advent of Code !")
+globals = AOCSettings.from_env(os.path.dirname(__file__))
 
 @app.command()
 def prepare(
         year: year_type,
         day: day_type,
-        replace: Annotated[bool|None, typer.Option(help="Replace existing")] = False,
+        replace: Annotated[bool, typer.Option(help="Replace existing")] = False,
+        read: Annotated[ReadMode, typer.Option(help="Change read mode")] = globals.read_mode,
+        template: Annotated[str, typer.Option(help='Use template file')] = globals.template,
     ):
     """
     Oh, yet another Advent of Code day !
     """
-    target_paths = [os.path.dirname(__file__), 'settings', f'{year}', f'settings_{year}_{day}.py']
-    target_path = os.path.join(*target_paths[:-1])
-    if not os.path.exists(target_path):
-        os.mkdir(target_path)
-        Path.touch(os.path.join(target_path, '__init__.py')) # type: ignore
-    target_path = os.path.join(*target_paths)
+    base = globals.get_settings_base()
+    for t in globals.get_settings_dir(year, day).split('/'):
+        target = os.path.join(base, t)
+        if not os.path.exists(target):
+            os.mkdir(target)
+            Path.touch(os.path.join(target, '__init__.py')) # type: ignore
+            base = target
     try:
-        target = open(target_path, 'w' if replace else 'x')
+        target = open(globals.get_settings_path(year, day), 'w' if replace else 'x')
     except FileExistsError:
         print("Use `--replace` option to overwrite")
         raise typer.Exit()
-    env = Environment(
+    tmpl_env = Environment(
         loader=PackageLoader("aoc"),
         autoescape=select_autoescape()
     )
-    template = env.get_template("settings.py.j2")
-    target.write(template.render(year=year, day=day))
+    tmpl = tmpl_env.get_template(template)
+    target.write(tmpl.render(year=year, day=day, read=read))
     target.close()
 
 
@@ -59,9 +61,9 @@ def play(
     """
     Well, let's play Advent of Code today !
     """
-    imp_mod = importlib.import_module(f"settings.{year}.settings_{year}_{day}")
+    imp_mod = importlib.import_module(globals.get_settings_mod(year, day))
     settings = getattr(imp_mod, "settings")
-    exercise = Exercise.from_settings(settings[exo-1]|{'data_path': os.path.join(DATA_DIR, f"{year}")})
+    exercise = Exercise.from_settings(globals, settings[exo-1], year, day)
     exercise.run(test)
 
 if __name__ == '__main__':

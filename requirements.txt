@@ -1,3 +1,4 @@
 Jinja2
 typer
 numpy
+python-dotenv
