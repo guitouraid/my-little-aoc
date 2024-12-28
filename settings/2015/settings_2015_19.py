@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import re
 from typing import Any
 from aoc import ReadMode
@@ -49,14 +50,31 @@ class Machine:
         for curm in self.re_sub.finditer(self.chain):
             curs = curm.group()
             for s in self.subst.get(curs, (curs)):
-                yield ''.join(self.chain[:curm.start()] + s + self.chain[curm.end():])
+                yield self.chain[:curm.start()] + s + self.chain[curm.end():]
 
 
 class Synthetizer:
     def __init__(self, data: str):
-        self.chain, self.subst = parse_input(data, True)
+        self.chain, subst = parse_input(data, True)
+        self.non_e_subst = {k: v for k, v in subst.items() if v != 'e'}
+        # Missing result
+        k='Ca(F)'.replace('(','Rn').replace(',','Y').replace(')','Ar')
+        self.non_e_subst[k]='F'
+        self.re_e = re.compile(r'|'.join([k for k, v in subst.items() if v == 'e']))
 
-    
+    def retro_synth_count(self, mol: str) -> int:
+        changed = True
+        cpt = 0
+        while changed:
+            changed = False
+            for k, v in self.non_e_subst.items():
+                if c:= mol.count(k):
+                    cpt += c
+                    mol = mol.replace(k, v)
+                    changed = True
+        if self.re_e.match(mol):
+            return cpt + 1
+        raise ValueError(f'Should not happen with: {mol}')
 
 def exo1(data: str) -> int:
     m = Machine(data)
@@ -65,6 +83,7 @@ def exo1(data: str) -> int:
 
 def exo2(data: str) -> int:
     s = Synthetizer(data)
+    return s.retro_synth_count((s.chain))
 
 settings = (
     {
