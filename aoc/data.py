@@ -37,11 +37,10 @@ class FileData(BaseData):
 
     def _read_all(self) -> str:
         with open(self.path) as fd:
-            return fd.read()
+            return fd.read().strip()
 
     def _read_lines(self) -> list[str]:
-        with open(self.path, buffering=1) as fd:
-            return [line.strip() for line in fd if line]
+        return [line.strip() for line in self._read_all().splitlines()]
 
 class DataProvider:
     def __init__(self, globals: AOCSettings, year: int, day: int) -> None:
