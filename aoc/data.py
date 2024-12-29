@@ -24,10 +24,10 @@ class RawData(BaseData):
         super().__init__()
 
     def _read_all(self) -> str:
-        return self.data
+        return self.data.strip()
 
     def _read_lines(self) -> list[str]:
-        return [line.strip() for line in self.data.strip().split('\n')]
+        return [line.strip() for line in self._read_all().split('\n')]
 
 
 class FileData(BaseData):
