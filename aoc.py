@@ -7,7 +7,7 @@ from typing_extensions import Annotated
 import typer
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from aoc import ReadMode
+from aoc import InputType, ReadMode
 from aoc.exercise import Exercise
 from aoc.settings import AOCSettings
 
@@ -23,7 +23,8 @@ def prepare(
         year: year_type,
         day: day_type,
         replace: Annotated[bool, typer.Option(help="Replace existing")] = False,
-        read: Annotated[ReadMode, typer.Option(help="Change read mode")] = globals.read_mode,
+        read: Annotated[ReadMode, typer.Option(help="Set read mode")] = globals.read_mode,
+        input: Annotated[InputType, typer.Option(help='Set input type')] = globals.input_type,
         template: Annotated[str, typer.Option(help='Use template file')] = globals.template,
     ):
     """
@@ -46,7 +47,7 @@ def prepare(
         autoescape=select_autoescape()
     )
     tmpl = tmpl_env.get_template(template)
-    target.write(tmpl.render(year=year, day=day, read=read))
+    target.write(tmpl.render(year=year, day=day, read=read, input=input))
     target.close()
 
 

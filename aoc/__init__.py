@@ -10,3 +10,7 @@ class ReadMode(str, Enum):
                 return 'list[str]'
             case ReadMode.READ_ALL:
                 return 'str'
+
+class InputType(str, Enum):
+    FILE = "file"
+    RAW = 'raw'
