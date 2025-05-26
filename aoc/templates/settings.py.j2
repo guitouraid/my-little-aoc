@@ -1,12 +1,16 @@
 READ_MODE = "{{ read.value }}"
 
-### test/real data as raw string or file
+### test/real data as raw string ...
 TEST_DATA_2 = TEST_DATA_1 = """
 """
 
-### store file under `DATA_DIR`
-REAL_FILE_2 = REAL_FILE_1 = "{{ year }}_{{ day }}.txt"
-
+### ... or file (store file under `DATA_DIR`)
+{% if input.value == 'file' %}
+REAL_DATA_2 = REAL_DATA_1 = "{{ year }}_{{ day }}.txt"
+{% else %}
+REAL_DATA_2 = REAL_DATA_1 = """
+"""
+{% endif %}
 
 def exo1(data: {{ read.data_type() }}) -> int:
     return 0
@@ -23,8 +27,8 @@ settings = (
             'expected': 0,
         },
         'real_data': {
-            'type': 'file',
-            'from': REAL_FILE_1,
+            'type': '{{ input.value }}',
+            'from': REAL_DATA_1,
         },
         'runner': exo1,
     },
@@ -36,8 +40,8 @@ settings = (
             'expected': 0,
         },
         'real_data': {
-            'type': 'file',
-            'from': REAL_FILE_2,
+            'type': '{{ input.value }}',
+            'from': REAL_DATA_2,
         },
         'runner': exo2,
     },

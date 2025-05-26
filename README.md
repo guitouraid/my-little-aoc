@@ -146,7 +146,7 @@ settings = (
 
 You could first replace the [default template](aoc/templates/settings.py.j2) with your own. As long s you provide
 a `dict` named `settings` with a structure similar to the [default one](aoc/templates/settings.py.j2), it should work.
-And all you have to know is that template variables are `year`, `day` and `read_mode`.
+And all you have to know is that template variables are `year`, `day`, `read` (read mode can be `all` for raw string or `lines` for a list of stripped lines) and `input` (input mod can be `raw` for raw string data or `file` for file name).
 The rest is at your discretion.
 
 For example: `my_custom_template.py.j2`

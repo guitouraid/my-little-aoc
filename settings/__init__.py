@@ -15,3 +15,6 @@ DEFAULT_TEMPLATE = 'settings.py.j2'
 
 # read mode to apply for template
 DEFAULT_READ_MODE = 'lines'
+
+# (real) input type
+DEFAULT_INPUT_TYPE = 'file'
