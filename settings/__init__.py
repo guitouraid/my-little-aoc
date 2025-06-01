@@ -5,7 +5,7 @@ DEFAULT_DATA_DIR = 'data/{year}'
 DEFAULT_DATA_FILE = '{year}_{day}.txt'
 
 # relative to settings directory
-DEFAULT_SETTINGS_DIR = '{year}'
+DEFAULT_SETTINGS_DIR = '_{year}'
 
 # relative to `SETTINGS_DIR` or absolute
 DEFAULT_SETTINGS_FILE = 'settings_{year}_{day}.py'

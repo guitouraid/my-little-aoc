@@ -198,16 +198,17 @@ settings = (
 
 ```
 
-Now, imagine you want to organize with exercise and 'input' file in the same place (smth like `2015/02/{day02.py,input}`),
+Now, imagine you want to organize with exercise and 'input' file in the same place (smth like `_2015/02/{day02.py,input}`),
 the only requirement is that exercises must be placed under `settings` directory.
 Then you could create a `.env` file with the following content:
 
 ```
-SETTINGS_DIR='{year}/{day:02d}'
-DATA_DIR='settings/{year}/{day:02d}'
+SETTINGS_DIR='_{year}/{day:02d}'
+DATA_DIR='settings/_{year}/{day:02d}'
 SETTINGS_FILE='day{day:02d}.py'
 TEMPLATE='my_custom_template.py.j2'
 ```
+... and make your own template (if not already done).
 
 Note: you might also want to change default read mode for template in `.env` file (`READ_MODE='all'`),
 or you might agree it makes quite a good default...
@@ -220,8 +221,7 @@ you can always directly change it in your generated exercise file (just take car
 ### What if you don't get the point about `kw_args` ?
 
 Well, happens to be usefull just on rare occasions...
-Sometimes an exercise need to perform an operation a certain number of times, 
-that differ between test and real solution:
+For example, sometimes an exercise need to perform an operation a certain number of times, that differ between test and real solution.
 Then just make your exercise function take another argument `def exo1(data, rounds)`
 and add in settings where relevant `'kwargs': {'rounds': X}`
 

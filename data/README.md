@@ -1,6 +1,6 @@
 # The simple way
 
-Simply put, one subdirectory per year (e.g. 2015), and text files inside.
+Simply put, one subdirectory per year (e.g. _2015), and text files inside.
 This is how things were coded at least.
 
 # Workarounds
