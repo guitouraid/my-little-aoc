@@ -4,6 +4,7 @@ class ReadMode(str, Enum):
     READ_LINES = "lines"
     READ_ALL = "all"
 
+    @property
     def data_type(self):
         match self:
             case ReadMode.READ_LINES:
@@ -14,3 +15,15 @@ class ReadMode(str, Enum):
 class InputType(str, Enum):
     FILE = "file"
     RAW = 'raw'
+
+class OutputType(str, Enum):
+    INT = 'int'
+    STR = 'str'
+
+    @property
+    def sample(self) -> str:
+        match self:
+            case OutputType.INT:
+                return '0'
+            case OutputType.STR:
+                return "''"

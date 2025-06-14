@@ -12,11 +12,11 @@ REAL_DATA_2 = REAL_DATA_1 = """
 """
 {% endif %}
 
-def exo1(data: {{ read.data_type() }}) -> int:
-    return 0
+def exo1(data: {{ read.data_type }}) -> {{ output.value }}:
+    return {{ output.sample }}
 
-def exo2(data: {{ read.data_type() }}) -> int:
-    return 0
+def exo2(data: {{ read.data_type }}) -> {{ output.value }}:
+    return {{ output.sample }}
 
 settings = (
     {
@@ -24,7 +24,7 @@ settings = (
         'test_data': {
             'type': 'raw',
             'from': TEST_DATA_1,
-            'expected': 0,
+            'expected': {{ output.sample }},
         },
         'real_data': {
             'type': '{{ input.value }}',
@@ -37,7 +37,7 @@ settings = (
         'test_data': {
             'type': 'raw',
             'from': TEST_DATA_2,
-            'expected': 0,
+            'expected': {{ output.sample }},
         },
         'real_data': {
             'type': '{{ input.value }}',
