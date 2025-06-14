@@ -25,7 +25,7 @@ def prepare(
         replace: Annotated[bool, typer.Option(help="Replace existing")] = False,
         read: Annotated[ReadMode, typer.Option(help="Set read mode")] = globals.read_mode,
         input: Annotated[InputType, typer.Option(help='Set input type')] = globals.input_type,
-        output: Annotated[OutputType, typer.Option(help='Set output type')] = globals.input_type,
+        output: Annotated[OutputType, typer.Option(help='Set output type')] = globals.output_type,
         template: Annotated[str, typer.Option(help='Use template file')] = globals.template,
     ):
     """
