@@ -18,3 +18,6 @@ DEFAULT_READ_MODE = 'lines'
 
 # (real) input type
 DEFAULT_INPUT_TYPE = 'file'
+
+# output type
+DEFAULT_OUTPUT_TYPE = 'int'

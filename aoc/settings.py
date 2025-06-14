@@ -2,8 +2,8 @@ from dataclasses import dataclass
 import os
 
 from dotenv import load_dotenv
-from aoc import InputType, ReadMode
-from settings import DEFAULT_DATA_DIR, DEFAULT_INPUT_TYPE, DEFAULT_READ_MODE, DEFAULT_SETTINGS_DIR, DEFAULT_SETTINGS_FILE, DEFAULT_TEMPLATE
+from aoc import InputType, OutputType, ReadMode
+from settings import DEFAULT_DATA_DIR, DEFAULT_INPUT_TYPE, DEFAULT_OUTPUT_TYPE, DEFAULT_READ_MODE, DEFAULT_SETTINGS_DIR, DEFAULT_SETTINGS_FILE, DEFAULT_TEMPLATE
 
 @dataclass
 class AOCSettings:
@@ -14,6 +14,7 @@ class AOCSettings:
     template: str
     read_mode: ReadMode
     input_type: InputType
+    output_type: OutputType
 
     @classmethod
     def from_env(cls, base: str):
@@ -29,6 +30,7 @@ class AOCSettings:
             template = os.getenv('TEMPLATE', DEFAULT_TEMPLATE),
             read_mode = ReadMode(os.getenv('READ_MODE', DEFAULT_READ_MODE)),
             input_type = InputType(os.getenv('INPUT_TYPE', DEFAULT_INPUT_TYPE)),
+            output_type = OutputType(os.getenv('OUTPUT_TYPE', DEFAULT_OUTPUT_TYPE)),
         )
 
     def get_data_path(self, year: int, day: int, data_file: str) -> str:
