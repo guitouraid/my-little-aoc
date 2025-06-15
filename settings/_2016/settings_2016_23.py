@@ -1,6 +1,6 @@
 import re
 from typing import Self
-from settings._2016.settings_2016_12 import Computer, IllegalInstruction
+from settings._2016.settings_2016_12 import Assembly, BaseComputer, Computer, ComputerState, IllegalInstruction, Instruction
 
 
 READ_MODE = "lines"
@@ -20,48 +20,98 @@ dec a
 
 REAL_DATA_2 = REAL_DATA_1 = "2016_23.txt"
 
-class ExtendedComputer(Computer):
-    def __init__(self, data: list[str]) -> None:
-        super().__init__(data)
 
-    def _tgl(self, offest: int, decal: str):
-        target = offest + self.registry[decal] or int(decal)
-        if target < len(self.program):
-            instr, *args = self.program[target]
-            if len(args) == 2:
-                if instr == 'jnz':
+class Tgl(Instruction):
+    def _operate(self, comp: BaseComputer) -> int:
+        target: int = comp.cs.pc + Instruction.value(comp.cs.reg, self.args[0]) # type: ignore
+        if 0 <= target < len(comp.program): # type: ignore
+            i: Instruction = comp.program[target] # type: ignore
+            if len(i.args) == 2:
+                if i.instr == 'jnz':
                     new = 'cpy'
                 else:
                     new = 'jnz'
-            elif instr == 'inc':
+            elif i.instr == 'inc':
                 new = 'dec'
             else:
                 new = 'inc'
-            self.program[target][0] = new
-        return offest + 1
+            comp.program[target] = comp.asm.instruction([new] + i.args) # type: ignore
+        return self._INC
+
+
+class TglAssembly(Assembly):
+    def __init__(self) -> None:
+        super().__init__()
+        self.language['tgl'] = Tgl
+
+
+class ExtendedComputer(Computer):
+    def __init__(self, data: list[str], asm: Assembly = TglAssembly(), dbg: bool = False) -> None:
+        super().__init__(data, asm=asm, dbg=dbg)
 
     def run(self):
-        offset = 0
-        while 0 <= offset < len(self.program):
-            instr, *args = self.program[offset]
+        while 0 <= self.cs.pc < len(self.program):
+            self.logger.debug(self._state())
+            instr = self.program[self.cs.pc]
             try:
-                offset = self._real_cmd(instr)(offset, *args)
-            except IllegalInstruction:
-                offset += 1
+                instr.operate(self)
+                self.logger.debug(instr.line)
+            except IllegalInstruction as ii:
+                self.cs.pc += 1
+                self.logger.debug(f'{instr.line}\t; ({str(ii)})')
+        self.logger.debug(f'{self._state()}\t(Stopped)')
 
 
 # kamoulox
-class ReMulHook:
-    _RE_MULT = re.compile(r'inc ([a-d]),dec ([a-d]),jnz \2 -2,dec ([a-d]),jnz \3 -5')
-    _ARGS = ['dest', 'op1', 'op2']
-    _FS = "add {dest} (mul {op1} {op2}) // clr {op1} {op2} // j {offset}"
-    _JUMP = 5
+class InstrPatternMatcher:
+    def __init__(self, lines: list[str]) -> None:
+        self.instructions = lines
+        self.jump = len(lines)
+        self._pattern = re.compile(r','.join(lines))
+
+    def match(self, comp: Computer) -> None | re.Match[str]:
+        if comp.cs.pc + self.jump  > len(comp.program):
+            return None
+        if not (ipm := self._pattern.match(','.join(i.line for i in comp.program[comp.cs.pc:comp.cs.pc+self.jump]))):
+            return None
+        if len(ipm.groups()) != len(set(ipm.groups())):
+            return None
+        # should probably also test for zero values in registers, even took the arg! But NO
+        return ipm
+
+
+class ReHook:
+    _ARGS: list[str]
+    _FS: str
+    _IPM: InstrPatternMatcher
 
     def __init__(self, rmatch: re.Match) -> None:
+        
         self.arg_map = {k: v for k, v in zip(self._ARGS, rmatch.groups())}
 
-    def as_str(self) -> str:
-        return self._FS.format(offset=self._JUMP, **self.arg_map)
+    def state(self) -> str:
+        return self._FS.format(offset=self._IPM.jump, **self.arg_map)
+
+    def run(self, reg: dict[str,int]) -> int:
+        raise NotImplementedError
+
+    @classmethod
+    def try_me(cls, comp: Computer) -> Self|None:
+        if m := cls._IPM.match(comp):
+            return cls(m)
+        return None
+
+
+class MulHook(ReHook):
+    _IPM = InstrPatternMatcher(ComputerState.patterns([
+        'inc {dest}',
+        'dec {op1}',
+        'jnz {op1} -2',
+        'dec {op2}',
+        'jnz {op2} -5'
+    ]))
+    _ARGS = ['dest', 'op1', 'op2']
+    _FS = "add {dest} (mul {op1} {op2}) // clr {op1} {op2} // j {offset}"
 
     def run(self, reg: dict[str,int]) -> int:
         dest= self.arg_map['dest']
@@ -69,66 +119,55 @@ class ReMulHook:
         op2 = self.arg_map['op2']
         reg[dest] += reg[op1] * reg[op2]
         reg[op1] = reg[op2] = 0
-        return self._JUMP
-
-    @classmethod
-    def try_me(cls, program: list[str], pc: int, reg: dict[str,int]) -> Self|None:
-        if pc + cls._JUMP - 1 >= len(program):
-            return None
-        if not (rm := cls._RE_MULT.match(','.join(program[pc:pc+cls._JUMP]))):
-            return None
-        if len(rm.groups()) > len(set(rm.groups())):
-            return None
-        # should probably also test for zero values in registers, even took the arg! But NO
-        return cls(rm)
+        return self._IPM.jump
 
 
 class Optimizer:
-    @classmethod
-    def try_hook(cls, program: list[list[str]], pc: int, reg: dict[str,int]) -> tuple[int,str]|None:
-        adapted = [ ' '.join(cmd) for cmd in program ]
-        if optim := ReMulHook.try_me(adapted, pc, reg):
-            return(optim.run(reg), optim.as_str())
+    def __init__(self, hooks: set[type[ReHook]]) -> None:
+        self.hooks = hooks
+
+    def try_hook(self, comp: Computer) -> tuple[int,str]|None:
+        for hook in self.hooks:
+            if optim := hook.try_me(comp):
+                return(optim.run(comp.cs.reg), optim.state())
         return None
 
 
 class OptimizedComputer(ExtendedComputer):
-    def __init__(self, data: list[str]) -> None:
-        super().__init__(data)
-        self.pc = 0
+    def __init__(self, data: list[str], asm: Assembly = TglAssembly(), dbg: bool = False, hooks: set[type[ReHook]] = {MulHook}) -> None:
+        super().__init__(data, asm=asm, dbg=dbg)
+        self.optim = Optimizer(hooks)
 
-    def _state(self, hook: str|None = None, end: bool = False) -> str:
-        if hook:
-            return f'{self.pc}\t{hook}\t; hooked: {self.program[self.pc]}\treg: {self.registry}'
-        if end:
-            return f'{self.pc}\tEnd of program\t;reg: {self.registry}'
-        return f'{self.pc}\t{self.program[self.pc]}\t;reg: {self.registry}'
-   
     def run(self):
-        while 0 <= self.pc < len(self.program):
-            if hook := Optimizer.try_hook(self.program, self.pc, self.registry):
-                print(self._state(hook=(hook[1])))
-                self.pc += hook[0]
+        while 0 <= self.cs.pc < len(self.program):
+            self.logger.debug(self._state())
+            i = self.program[self.cs.pc]
+            if hook := self.optim.try_hook(self):
+                self.logger.debug(f'{hook[1]}\t; hooked in: {i.line}')
+                self.cs.pc += hook[0]
             else:
-                print(self._state())
-                instr, *args = self.program[self.pc]
+                self.logger.debug(i.line)
                 try:
-                    self.pc = self._real_cmd(instr)(self.pc, *args)
-                except IllegalInstruction:
-                    self.pc += 1
-        print(self._state(end=True))
+                    i.operate(self)
+                    if i.instr == 'out':
+                        # dirty to mention unknown instruction here, but does not harm
+                        break
+                except IllegalInstruction as ii:
+                    self.cs.pc += 1
+                    self.logger.debug(f'{i.line}\t; ({str(ii)})')
+        self.logger.debug(f'{self._state()};\t({"Stopped"})')
 
 def exo1(data: list[str]) -> int:
     comp = ExtendedComputer(data)
-    comp.registry['a'] = 7
+    comp.cs.reset(reg={'a': 7})
     comp.run()
-    return comp.registry['a']
+    return comp.cs.reg['a']
 
 def exo2(data: list[str]) -> int:
     comp = OptimizedComputer(data)
-    comp.registry['a'] = 12
+    comp.cs.reset(reg={'a': 12})
     comp.run()
-    return comp.registry['a']
+    return comp.cs.reg['a']
 
 settings = (
     {
@@ -149,7 +188,7 @@ settings = (
         'test_data': {
             'type': 'raw',
             'from': TEST_DATA_2,
-            'expected': 0,
+            'expected': 3,
         },
         'real_data': {
             'type': 'file',
