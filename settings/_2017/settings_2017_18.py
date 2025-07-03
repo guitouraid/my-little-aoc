@@ -138,11 +138,8 @@ class Duettists:
             case _:
                 raise ValueError(f'Invalid instruction: {instr}')
 
-    def _can_run(self) -> bool:
-        return any(0<= p.pc < self.len and not p.waiting for p in self.progs)
-
     def run(self) -> int:
-        while self._can_run():
+        while any(0<= p.pc < self.len and not p.waiting for p in self.progs):
             self._process_instruction(self.pg, self.instructions[self.progs[self.pg].pc])
         return self.progs[1].sent
 
