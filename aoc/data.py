@@ -8,12 +8,17 @@ class BaseData:
     def _read_lines(self) -> list[str]:
         raise NotImplementedError
 
+    def _read_nostrip(self) -> str:
+        raise NotImplementedError
+
     def read(self, mode: ReadMode) -> str|list[str]:
         match mode:
             case ReadMode.READ_LINES:
                 return self._read_lines()
             case ReadMode.READ_ALL:
                 return self._read_all()
+            case ReadMode.READ_NOSTRIP:
+                return self._read_nostrip()
             case _:
                 raise NotImplementedError("Invalid read mode {mode}")
 
@@ -22,6 +27,9 @@ class RawData(BaseData):
     def __init__(self, data: str) -> None:
         self.data = data
         super().__init__()
+
+    def _read_nostrip(self) -> str:
+        return self.data
 
     def _read_all(self) -> str:
         return self.data.strip()
@@ -34,6 +42,10 @@ class FileData(BaseData):
     def __init__(self, path: str) -> None:
         self.path = path
         super().__init__()
+
+    def _read_nostrip(self) -> str:
+        with open(self.path) as fd:
+            return fd.read()
 
     def _read_all(self) -> str:
         with open(self.path) as fd:
