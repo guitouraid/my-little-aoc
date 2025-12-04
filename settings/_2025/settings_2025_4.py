@@ -73,8 +73,7 @@ class RollStorage:
     def count_removable_rolls(self) -> int:
         rolls = self.rolls.copy()
         while rem := self._reachable_rolls(rolls):
-            for r in rem:
-                rolls.remove(r)
+            rolls -= rem
         return len(self.rolls) - len(rolls)
 
 
