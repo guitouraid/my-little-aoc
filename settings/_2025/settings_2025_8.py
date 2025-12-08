@@ -80,7 +80,7 @@ class Junction:
                         groups.remove(groups[g2])
             if steps and i == steps -1:
                 break
-            elif len(groups) == 1 and len(set(groups[0])) == length:
+            elif len(groups) == 1 and len(groups[0]) == length:
                 break
         return ([len(g) for g in groups], (b1, b2)) # pyright: ignore[reportPossiblyUnboundVariable]
 
